@@ -7,7 +7,8 @@ const fields = z.object({
   position: z.string().min(1),
   status: z.enum(statuses),
   appliedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  link: z.string().url().optional().or(z.literal('')),
+  // http(s) only: blocks javascript: and data: links that would run when clicked
+  link: z.url({ protocol: /^https?$/ }).optional().or(z.literal('')),
   notes: z.string().optional(),
 })
 
