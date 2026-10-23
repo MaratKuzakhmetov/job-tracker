@@ -19,12 +19,23 @@ async function submit() {
 </script>
 
 <template>
-  <main>
-    <h1>Login</h1>
-    <form @submit.prevent="submit">
-      <input v-model="password" type="password" placeholder="Password" autocomplete="current-password" required />
-      <button :disabled="busy">Log in</button>
-      <p v-if="error">{{ error }}</p>
-    </form>
-  </main>
+  <UContainer class="flex min-h-screen items-center justify-center">
+    <UCard class="w-full max-w-sm">
+      <template #header>
+        <h1 class="text-lg font-semibold">Login</h1>
+      </template>
+      <form class="grid gap-3" @submit.prevent="submit">
+        <UInput
+          v-model="password"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+          required
+          class="w-full"
+        />
+        <UButton type="submit" label="Log in" :loading="busy" class="justify-center" />
+        <UAlert v-if="error" color="error" variant="subtle" :title="error" />
+      </form>
+    </UCard>
+  </UContainer>
 </template>

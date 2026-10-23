@@ -4,9 +4,9 @@ const { data: applications, refresh, error: loadError } = await useFetch<Applica
   { default: () => [] },
 );
 
-const statusFilter = ref<Status | "">("");
+const statusFilter = ref<Status | "All">("All");
 const visible = computed(() =>
-  statusFilter.value
+  statusFilter.value !== "All"
     ? applications.value.filter((a) => a.status === statusFilter.value)
     : applications.value,
 );
@@ -60,25 +60,28 @@ watch(
 </script>
 
 <template>
-  <main>
-    <h1>Job applications</h1>
-    <button @click="logout">Log out</button>
-    <p v-if="error" role="alert">
-      {{ error }}
-      <button type="button" @click="error = ''">Dismiss</button>
-    </p>
+  <UContainer class="grid gap-6 py-8">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-semibold">Job applications</h1>
+      <UButton label="Log out" color="neutral" variant="outline" @click="logout" />
+    </div>
+    <UAlert
+      v-if="error"
+      color="error"
+      variant="subtle"
+      :title="error"
+      close
+      @update:open="error = ''"
+    />
     <ApplicationForm @create="create" />
-    <label>
-      Filter
-      <select v-model="statusFilter">
-        <option value="">All</option>
-        <option v-for="s in STATUSES" :key="s">{{ s }}</option>
-      </select>
-    </label>
+    <div class="flex items-center gap-2">
+      <span class="text-sm">Filter</span>
+      <USelect v-model="statusFilter" :items="['All', ...STATUSES]" class="w-40" />
+    </div>
     <ApplicationTable
       :applications="visible"
       @delete="remove"
       @update-status="updateStatus"
     />
-  </main>
+  </UContainer>
 </template>
