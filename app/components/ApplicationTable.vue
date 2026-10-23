@@ -9,6 +9,7 @@ const columns = [
   { accessorKey: "company", header: "Company" },
   { accessorKey: "position", header: "Position" },
   { accessorKey: "status", header: "Status" },
+  { accessorKey: "language", header: "Language" },
   { accessorKey: "appliedDate", header: "Applied" },
   { accessorKey: "link", header: "Link" },
   { id: "actions", header: "" },

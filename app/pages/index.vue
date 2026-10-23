@@ -1,15 +1,38 @@
 <script setup lang="ts">
+import Fuse from "fuse.js";
+
 const { data: applications, refresh, error: loadError } = await useFetch<Application[]>(
   "/api/applications",
   { default: () => [] },
 );
 
 const statusFilter = ref<Status | "All">("All");
-const visible = computed(() =>
-  statusFilter.value !== "All"
-    ? applications.value.filter((a) => a.status === statusFilter.value)
-    : applications.value,
-);
+const languageFilter = ref<Language | "All">("All");
+const companySearch = ref("");
+const positionFilter = ref("All");
+
+// positions you have saved, for the dropdown
+const positions = computed(() => [
+  "All",
+  ...new Set(applications.value.map((a) => a.position).sort((x, y) => x.localeCompare(y))),
+]);
+
+// fuzzy match on company name, so small typos still find the company
+function searchCompany(items: Application[], query: string) {
+  const q = query.trim();
+  if (!q) return items;
+  return new Fuse(items, { keys: ["company"], threshold: 0.4, ignoreLocation: true })
+    .search(q)
+    .map((r) => r.item);
+}
+
+const visible = computed(() => {
+  let items = applications.value;
+  if (statusFilter.value !== "All") items = items.filter((a) => a.status === statusFilter.value);
+  if (languageFilter.value !== "All") items = items.filter((a) => a.language === languageFilter.value);
+  if (positionFilter.value !== "All") items = items.filter((a) => a.position === positionFilter.value);
+  return searchCompany(items, companySearch.value);
+});
 
 const error = ref("");
 
@@ -74,8 +97,10 @@ watch(
       @update:open="error = ''"
     />
     <ApplicationForm @create="create" />
-    <div class="flex items-center gap-2">
-      <span class="text-sm">Filter</span>
+    <div class="flex flex-wrap items-center gap-2">
+      <UInput v-model="companySearch" placeholder="Search company..." class="min-w-56 flex-1" />
+      <USelect v-model="positionFilter" :items="positions" class="w-48" />
+      <USelect v-model="languageFilter" :items="['All', ...LANGUAGES]" class="w-28" />
       <USelect v-model="statusFilter" :items="['All', ...STATUSES]" class="w-40" />
     </div>
     <ApplicationTable

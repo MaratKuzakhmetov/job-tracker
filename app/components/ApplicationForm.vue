@@ -14,6 +14,7 @@ const empty = (): Omit<Application, "id"> => ({
   company: "",
   position: "",
   status: "Applied",
+  language: "EN",
   appliedDate: today,
   link: "",
   notes: "",
@@ -41,6 +42,9 @@ function submit() {
     </UFormField>
     <UFormField label="Status" name="status">
       <USelect v-model="state.status" :items="[...STATUSES]" class="w-full" />
+    </UFormField>
+    <UFormField label="Language" name="language">
+      <USelect v-model="state.language" :items="[...LANGUAGES]" class="w-full" />
     </UFormField>
     <UFormField label="Applied" name="appliedDate">
       <UInput v-model="state.appliedDate" type="date" class="w-full" />
