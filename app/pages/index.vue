@@ -19,6 +19,10 @@ async function updateStatus(id: string, status: Status) {
   await $fetch(`/api/applications/${id}`, { method: "PUT", body: { status } });
   await refresh();
 }
+async function logout() {
+  await $fetch("/api/auth/logout", { method: "POST" });
+  await navigateTo("/login");
+}
 async function remove(id: string) {
   await $fetch(`/api/applications/${id}`, { method: "DELETE" });
   await refresh();
@@ -28,6 +32,7 @@ async function remove(id: string) {
 <template>
   <main>
     <h1>Job applications</h1>
+    <button @click="logout">Log out</button>
     <ApplicationForm @create="create" />
     <label>
       Filter
