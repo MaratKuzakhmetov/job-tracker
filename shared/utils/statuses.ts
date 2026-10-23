@@ -1,0 +1,1 @@
+export const STATUSES: Status[] = ['Applied', 'Interview', 'Offer', 'Rejected']
