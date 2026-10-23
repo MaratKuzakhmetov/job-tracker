@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const redis = useRedis(event)
-  const failKey = `login_fail:${getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'}`
+  const failKey = `login_fail:${getRequestHeader(event, 'cf-connecting-ip') ?? getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'}`
 
   if (Number((await redis.get(failKey)) ?? 0) >= MAX_FAILS) {
     throw createError({ statusCode: 429, statusMessage: 'Too many attempts' })

@@ -31,11 +31,25 @@ Things to fix before putting the job tracker on a public host.
   - Known gap: `ApplicationForm.vue` clears its fields as soon as you press Add, even if the save
     fails, so typed data is lost on error. Fix by clearing only after a successful save.
 
+## MCP + Cloudflare
+
+- [x] Cloudflare build: Nitro preset `cloudflare_module` with `nodejs_compat`, worker name `job-tracker`
+      (`pnpm build` works and generates `.output/server/wrangler.json`)
+- [x] MCP endpoint `POST /mcp` (stateless, official SDK web transport) with tools
+      `list_applications`, `create_application`, `update_application`, `delete_application`
+- [x] Bearer-token auth for `/mcp` (`NUXT_MCP_TOKEN`, 32+ chars; the route refuses to run without it)
+- [x] Data logic shared between REST routes and MCP tools: `server/utils/applicationStore.ts`
+- [x] Login lockout reads the client IP from `CF-Connecting-IP` first
+- [ ] Deploy and set secrets on Cloudflare (see below)
+- [ ] Add the connector to Claude Desktop (`claude_desktop_config.json`, via `mcp-remote`)
+- [ ] Mention the job-tracker tools in the Claude project instructions
+- [ ] Later, optional: OAuth so the server also works from the Connectors screen / claude.ai
+
 ## Before the first deploy
 
-- [ ] Set all four env vars on the host with the `NUXT_` prefix:
+- [ ] Set all five as Cloudflare secrets (`npx wrangler secret put NAME`), with the `NUXT_` prefix:
   `NUXT_UPSTASH_REDIS_REST_URL`, `NUXT_UPSTASH_REDIS_REST_TOKEN`,
-  `NUXT_ADMIN_PASSWORD`, `NUXT_SESSION_SECRET` (32+ random characters)
+  `NUXT_ADMIN_PASSWORD`, `NUXT_SESSION_SECRET` (32+ random characters), `NUXT_MCP_TOKEN` (32+ characters)
 - [ ] Serve over HTTPS (the session cookie is `secure` in production)
 - [ ] Update Node to `^22.21.0` (or 24.11+) and `.nvmrc` to match
 - [ ] Install `@types/node` (`pnpm add -D @types/node`) so the editor knows `node:crypto`
