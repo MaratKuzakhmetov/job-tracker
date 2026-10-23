@@ -23,11 +23,13 @@ Things to fix before putting the job tracker on a public host.
   - Note: `.gitignore` has `!.env.example` but the file is named `.env-example` (with a dash), so it is
     caught by no rule. It is safe to commit, since it holds only placeholders.
 
-- [ ] **4. Error handling in the UI**
-  The `$fetch` calls in `app/pages/index.vue` (`create`, `updateStatus`, `remove`) have no `try/catch`.
-  If Redis or the network fails, the user sees nothing.
-  - Fix: wrap each call, show a short error message on the page.
-  - Also handle an expired session: on a 401, redirect to `/login`.
+- [x] **4. Error handling in the UI**
+  The `$fetch` calls in `app/pages/index.vue` had no `try/catch`, so failures were silent.
+  - Fixed: every action goes through one `run()` wrapper that shows one generic dismissible message
+    ("Something went wrong. Please reload the page and try again.") and redirects to `/login` on a 401.
+  - The initial list load is handled too (`useFetch` error).
+  - Known gap: `ApplicationForm.vue` clears its fields as soon as you press Add, even if the save
+    fails, so typed data is lost on error. Fix by clearing only after a successful save.
 
 ## Before the first deploy
 
