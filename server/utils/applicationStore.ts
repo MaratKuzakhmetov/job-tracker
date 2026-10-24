@@ -45,4 +45,35 @@ export async function updateApplication(redis: Redis, id: string, input: Applica
 export async function deleteApplication(redis: Redis, id: string) {
   await redis.del(`application:${id}`)
   await redis.zrem('applications', id)
+  // best effort: the application is gone even if the file cannot be removed
+  await useStorage('cv').removeItem(`${id}.pdf`).catch(() => {})
+}
+
+// ids are plain numbers; reject anything else before it reaches storage keys
+export function parseId(value: unknown) {
+  const id = String(value)
+  if (!/^\d+$/.test(id)) throw createError({ statusCode: 400, statusMessage: 'Invalid id' })
+  return id
+}
+
+// CV (PDF) per application: file in storage 'cv', display name in the Redis hash
+export async function saveCv(redis: Redis, id: string, name: string, bytes: Uint8Array) {
+  const key = `application:${id}`
+  if (!(await redis.exists(key))) return null
+  await useStorage('cv').setItemRaw(`${id}.pdf`, bytes)
+  await redis.hset(key, { cvName: name })
+  return toRecord(await redis.hgetall(key))
+}
+
+export async function readCv(id: string) {
+  const raw = await useStorage('cv').getItemRaw(`${id}.pdf`)
+  return raw ? new Uint8Array(raw as ArrayBuffer) : null
+}
+
+export async function removeCv(redis: Redis, id: string) {
+  const key = `application:${id}`
+  if (!(await redis.exists(key))) return null
+  await useStorage('cv').removeItem(`${id}.pdf`)
+  await redis.hdel(key, 'cvName')
+  return toRecord(await redis.hgetall(key))
 }

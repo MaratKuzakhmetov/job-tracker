@@ -13,6 +13,8 @@ const fields = z.object({
   // http(s) only: blocks javascript: and data: links that would run when clicked
   link: z.url({ protocol: /^https?$/ }).optional().or(z.literal('')),
   notes: z.string().optional(),
+  // the job posting text, saved because the link to the role may stop working
+  description: z.string().max(20000).optional(),
 })
 
 // create: status falls back to 'Applied'

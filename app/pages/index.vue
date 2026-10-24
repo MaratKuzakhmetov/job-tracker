@@ -65,6 +65,31 @@ const remove = (id: string) =>
     await refresh();
   });
 
+const MAX_CV_BYTES = 5 * 1024 * 1024;
+
+const uploadCv = (id: string, file: File) => {
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    error.value = "Only PDF files are allowed.";
+    return;
+  }
+  if (file.size > MAX_CV_BYTES) {
+    error.value = "The PDF is larger than 5 MB.";
+    return;
+  }
+  return run(async () => {
+    const body = new FormData();
+    body.append("file", file);
+    await $fetch(`/api/applications/${id}/cv`, { method: "POST", body });
+    await refresh();
+  });
+};
+
+const removeCv = (id: string) =>
+  run(async () => {
+    await $fetch(`/api/applications/${id}/cv`, { method: "DELETE" });
+    await refresh();
+  });
+
 const logout = () =>
   run(async () => {
     await $fetch("/api/auth/logout", { method: "POST" });
@@ -97,16 +122,26 @@ watch(
       @update:open="error = ''"
     />
     <ApplicationForm @create="create" />
-    <div class="flex flex-wrap items-center gap-2">
-      <UInput v-model="companySearch" placeholder="Search company..." class="min-w-56 flex-1" />
-      <USelect v-model="positionFilter" :items="positions" class="w-48" />
-      <USelect v-model="languageFilter" :items="['All', ...LANGUAGES]" class="w-28" />
-      <USelect v-model="statusFilter" :items="['All', ...STATUSES]" class="w-40" />
+    <div class="flex flex-wrap items-end gap-2">
+      <UFormField label="Company" class="min-w-56 flex-1">
+        <UInput v-model="companySearch" placeholder="Search company..." class="w-full" />
+      </UFormField>
+      <UFormField label="Position">
+        <USelect v-model="positionFilter" :items="positions" class="w-48" />
+      </UFormField>
+      <UFormField label="Language">
+        <USelect v-model="languageFilter" :items="['All', ...LANGUAGES]" class="w-28" />
+      </UFormField>
+      <UFormField label="Status">
+        <USelect v-model="statusFilter" :items="['All', ...STATUSES]" class="w-40" />
+      </UFormField>
     </div>
     <ApplicationTable
       :applications="visible"
       @delete="remove"
       @update-status="updateStatus"
+      @upload-cv="uploadCv"
+      @remove-cv="removeCv"
     />
   </UContainer>
 </template>

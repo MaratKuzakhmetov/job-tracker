@@ -6,6 +6,7 @@ const emit = defineEmits<{ create: [payload: Omit<Application, "id">] }>();
 const schema = z.object({
   company: z.string().min(1, "Required"),
   position: z.string().min(1, "Required"),
+  description: z.string().max(20000, "Max 20000 characters"),
   link: z.union([z.literal(""), z.url({ protocol: /^https?$/, error: "Use an http(s) link" })]),
 });
 
@@ -18,6 +19,7 @@ const empty = (): Omit<Application, "id"> => ({
   appliedDate: today,
   link: "",
   notes: "",
+  description: "",
 });
 const state = reactive(empty());
 
@@ -54,6 +56,9 @@ function submit() {
     </UFormField>
     <UFormField label="Notes" name="notes">
       <UInput v-model="state.notes" class="w-full" />
+    </UFormField>
+    <UFormField label="Description" name="description" class="sm:col-span-2 lg:col-span-3">
+      <UTextarea v-model="state.description" :rows="4" placeholder="Paste the job posting text..." class="w-full" />
     </UFormField>
     <UButton type="submit" label="Add" class="justify-center sm:col-span-2 lg:col-span-3" />
   </UForm>

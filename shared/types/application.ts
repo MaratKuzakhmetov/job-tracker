@@ -11,4 +11,6 @@ export interface Application {
   appliedDate: string
   link?: string
   notes?: string
+  description?: string
+  cvName?: string
 }

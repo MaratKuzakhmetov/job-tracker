@@ -40,8 +40,19 @@ Things to fix before putting the job tracker on a public host.
 - [x] Bearer-token auth for `/mcp` (`NUXT_MCP_TOKEN`, 32+ chars; the route refuses to run without it)
 - [x] Data logic shared between REST routes and MCP tools: `server/utils/applicationStore.ts`
 - [x] Login lockout reads the client IP from `CF-Connecting-IP` first
-- [ ] Deploy and set secrets on Cloudflare (see below)
-- [ ] Add the connector to Claude Desktop (`claude_desktop_config.json`, via `mcp-remote`)
+- [x] Deployed at https://job-tracker.markgp.com (custom domain, workers.dev and preview URLs off); secrets set
+- [x] Claude Desktop connected through `mcp-remote` (config in `claude_desktop_config.json`)
+
+## Website options
+
+- [x] ~~Live refresh~~ dropped: not needed, reload the page to see applications added through MCP
+- [x] CV per application (PDF only, max 5 MB): Upload / Open (new tab) / Replace / Remove in the table
+  - Files live in Cloudflare R2 (bucket `job-tracker-cv`, binding `CV`); in local dev they are plain files in `.data/cv`
+  - The file is checked on the server (`%PDF-` header), not just by name or type; `/api/.../cv` needs the login
+  - Deleting an application also deletes its CV; the file name is kept in the Redis field `cvName`
+  - [ ] **Enable R2 in the Cloudflare dashboard**, create the bucket (`npx wrangler r2 bucket create job-tracker-cv`),
+        then `pnpm build` and `npx wrangler --cwd .output deploy`
+
 - [ ] Mention the job-tracker tools in the Claude project instructions
 - [ ] Later, optional: OAuth so the server also works from the Connectors screen / claude.ai
 

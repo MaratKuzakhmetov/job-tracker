@@ -28,3 +28,6 @@ logs
 
 # Cloudflare / wrangler
 .wrangler
+
+# local CV files
+.data
