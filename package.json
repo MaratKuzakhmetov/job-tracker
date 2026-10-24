@@ -7,6 +7,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "deploy:cf": "nuxt build && npx wrangler --cwd .output deploy",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

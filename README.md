@@ -1,75 +1,54 @@
-# Nuxt Minimal Starter
+# Job tracker
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A personal job-application tracker. Nuxt 4, Nuxt UI, Upstash Redis, Cloudflare Workers + R2.
 
-## Setup
+- One password protects the site (session cookie).
+- Claude Desktop can manage applications through an MCP server at `/mcp` (bearer token).
+- Each application can have a PDF CV (stored in Cloudflare R2) and a pasted job description.
 
-Make sure to install dependencies:
+## Run locally
 
 ```bash
-# npm
-npm install
-
-# pnpm
 pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+cp .env-example .env   # then fill in the values (see below)
+pnpm dev               # http://localhost:3000
 ```
 
-## Development Server
+In development, CV files are saved as plain files in `.data/cv`.
 
-Start the development server on `http://localhost:3000`:
+## Environment variables
+
+All names start with `NUXT_`. Locally they live in `.env`; in production they are Cloudflare secrets.
+
+| Name                                                            | What it is                                         |
+| --------------------------------------------------------------- | -------------------------------------------------- |
+| `NUXT_UPSTASH_REDIS_REST_URL` / `NUXT_UPSTASH_REDIS_REST_TOKEN` | Your Upstash Redis database                        |
+| `NUXT_ADMIN_PASSWORD`                                           | The password you type on the login page            |
+| `NUXT_SESSION_SECRET`                                           | 32+ random characters, signs the session cookie    |
+| `NUXT_MCP_TOKEN`                                                | 32+ random characters, the bearer token for `/mcp` |
+
+## Deploy to Cloudflare
+
+Deploying is manual. A git commit or push does not publish anything.
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+pnpm deploy:cf
 ```
 
-## Production
+This builds the app and uploads it with Wrangler. (`pnpm deploy` without `:cf` is a different,
+built-in pnpm command, so the script has its own name.)
 
-Build the application for production:
+### First-time setup
 
-```bash
-# npm
-npm run build
+1. `npx wrangler login`
+2. Enable R2 in the Cloudflare dashboard, then `npx wrangler r2 bucket create job-tracker-cv`
+3. Set the five secrets, one at a time (it asks for the value):
+   `npx wrangler secret put NUXT_ADMIN_PASSWORD --name job-tracker` (same for the other four)
+4. `pnpm deploy:cf`
 
-# pnpm
-pnpm build
+The worker name, R2 bucket and custom domain are in `nuxt.config.ts` under `nitro.cloudflare.wrangler`.
 
-# yarn
-yarn build
+## Connect Claude Desktop
 
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Add the server to `claude_desktop_config.json` with `mcp-remote`, pointing at
+`https://<your-domain>/mcp` and sending the header `Authorization: Bearer <NUXT_MCP_TOKEN>`.
