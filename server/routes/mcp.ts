@@ -55,6 +55,46 @@ function buildServer(event: Parameters<typeof useRedis>[0]) {
     },
   )
 
+  server.registerTool(
+    'attach_cv',
+    {
+      description:
+        'Attach a PDF CV (max 5 MB) to an application, replacing any existing one. Give either `url` (a public https link to the PDF) or `copy_from_id` (the id of another application whose CV should be reused). Exactly one of the two.',
+      inputSchema: { id: z.string(), url: z.url({ protocol: /^https$/ }).optional(), copy_from_id: z.string().optional() },
+    },
+    async ({ id, url, copy_from_id }) => {
+      if (!url === !copy_from_id) return text('Pass exactly one of url or copy_from_id', true)
+      try {
+        let bytes: Uint8Array | null
+        let name: string
+        if (url) {
+          ;({ bytes, name } = await fetchPdf(url))
+        } else {
+          const source = await redis.hget<string>(`application:${parseId(copy_from_id)}`, 'cvName')
+          bytes = source ? await readCv(parseId(copy_from_id)) : null
+          name = source ?? ''
+        }
+        if (!bytes) return text(`Application ${copy_from_id} has no CV`, true)
+        const record = await saveCv(redis, parseId(id), name, bytes)
+        return record ? text(record) : text(`Application ${id} not found`, true)
+      } catch (e: any) {
+        return text(e?.statusMessage ?? 'Could not attach the CV', true)
+      }
+    },
+  )
+
+  server.registerTool(
+    'remove_cv',
+    {
+      description: 'Remove the CV from an application.',
+      inputSchema: { id: z.string() },
+    },
+    async ({ id }) => {
+      const record = await removeCv(redis, parseId(id))
+      return record ? text(record) : text(`Application ${id} not found`, true)
+    },
+  )
+
   return server
 }
 

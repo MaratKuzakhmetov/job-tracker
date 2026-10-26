@@ -65,6 +65,48 @@ export async function saveCv(redis: Redis, id: string, name: string, bytes: Uint
   return toRecord(await redis.hgetall(key))
 }
 
+export const MAX_CV_BYTES = 5 * 1024 * 1024
+
+// keep only a plain display name: no folders, no odd characters
+export const cvDisplayName = (name?: string) =>
+  (name ?? '').split(/[\\/]/).pop()!.replace(/[^\p{L}\p{N} ._()-]/gu, '').slice(0, 100) || 'cv.pdf'
+
+// check the file itself, not just the name or the type someone claims
+export function assertPdf(bytes: Uint8Array) {
+  if (!bytes.length) throw createError({ statusCode: 400, statusMessage: 'No file' })
+  if (bytes.length > MAX_CV_BYTES) {
+    throw createError({ statusCode: 413, statusMessage: 'File is too large (max 5 MB)' })
+  }
+  if (new TextDecoder().decode(bytes.subarray(0, 5)) !== '%PDF-') {
+    throw createError({ statusCode: 400, statusMessage: 'Only PDF files are allowed' })
+  }
+}
+
+// download a PDF from a public https link (used by the MCP tool)
+export async function fetchPdf(link: string) {
+  const url = new URL(link)
+  const host = url.hostname
+  if (url.protocol !== 'https:' || host === 'localhost' || /^[\d.]+$/.test(host) || host.includes(':')) {
+    throw createError({ statusCode: 400, statusMessage: 'Use a public https link' })
+  }
+  const response = await fetch(url, { signal: AbortSignal.timeout(15_000) })
+  if (!response.ok || !response.body) throw createError({ statusCode: 400, statusMessage: `Download failed (${response.status})` })
+
+  // read at most the limit, so a huge file cannot fill memory
+  const chunks: Uint8Array[] = []
+  let size = 0
+  for await (const chunk of response.body as unknown as AsyncIterable<Uint8Array>) {
+    size += chunk.length
+    if (size > MAX_CV_BYTES) throw createError({ statusCode: 413, statusMessage: 'File is too large (max 5 MB)' })
+    chunks.push(chunk)
+  }
+  const bytes = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length }
+  assertPdf(bytes)
+  return { bytes, name: cvDisplayName(decodeURIComponent(url.pathname.split('/').pop() || '')) }
+}
+
 export async function readCv(id: string) {
   const raw = await useStorage('cv').getItemRaw(`${id}.pdf`)
   return raw ? new Uint8Array(raw as ArrayBuffer) : null
