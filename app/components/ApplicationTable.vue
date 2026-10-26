@@ -5,6 +5,7 @@ const emit = defineEmits<{
   "update-status": [id: string, status: Status];
   "upload-cv": [id: string, file: File];
   "remove-cv": [id: string];
+  edit: [application: Application];
 }>();
 
 // one hidden file input shared by all rows
@@ -126,6 +127,14 @@ const columns = [
       </div>
     </template>
     <template #actions-cell="{ row }">
+      <div class="flex items-center gap-2">
+      <UButton
+        label="Edit"
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        @click="emit('edit', row.original)"
+      />
       <UButton
         label="Delete"
         color="error"
@@ -133,6 +142,7 @@ const columns = [
         size="xs"
         @click="emit('delete', row.original.id)"
       />
+      </div>
     </template>
   </UTable>
 </template>

@@ -65,6 +65,16 @@ const remove = (id: string) =>
     await refresh();
   });
 
+// the application open in the edit window (null = window closed)
+const editing = ref<Application | null>(null);
+
+const save = (payload: Omit<Application, "id">) =>
+  run(async () => {
+    await $fetch(`/api/applications/${editing.value!.id}`, { method: "PUT", body: payload });
+    editing.value = null;
+    await refresh();
+  });
+
 const MAX_CV_BYTES = 5 * 1024 * 1024;
 
 const uploadCv = (id: string, file: File) => {
@@ -142,6 +152,16 @@ watch(
       @update-status="updateStatus"
       @upload-cv="uploadCv"
       @remove-cv="removeCv"
+      @edit="editing = $event"
     />
+    <UModal
+      :open="!!editing"
+      title="Edit application"
+      @update:open="(open) => { if (!open) editing = null }"
+    >
+      <template #body>
+        <ApplicationForm v-if="editing" :key="editing.id" :application="editing" @save="save" />
+      </template>
+    </UModal>
   </UContainer>
 </template>
