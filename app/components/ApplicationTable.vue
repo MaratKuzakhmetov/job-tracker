@@ -39,6 +39,7 @@ const columns = [
   { accessorKey: "language", header: "Language" },
   { accessorKey: "appliedDate", header: "Applied" },
   { accessorKey: "link", header: "Link" },
+  { accessorKey: "notes", header: "Notes" },
   { id: "description", header: "Description" },
   { id: "cv", header: "CV" },
   { id: "actions", header: "" },
@@ -67,6 +68,9 @@ const columns = [
         variant="link"
         size="xs"
       />
+    </template>
+    <template #notes-cell="{ row }">
+      <p class="max-w-64 whitespace-normal text-sm">{{ row.original.notes }}</p>
     </template>
     <template #description-cell="{ row }">
       <UModal
