@@ -48,7 +48,12 @@ const columns = [
 
 <template>
   <input ref="fileInput" type="file" accept="application/pdf,.pdf" class="hidden" @change="onFile" />
-  <UTable :data="applications" :columns="columns" empty="No applications yet.">
+  <UTable
+    :data="applications"
+    :columns="columns"
+    :ui="{ th: 'px-2 py-2', td: 'px-2 py-2' }"
+    empty="No applications yet."
+  >
     <template #status-cell="{ row }">
       <UDropdownMenu
         :items="STATUSES.map((s) => ({ label: s, onSelect: () => emit('update-status', row.original.id, s) }))"
@@ -64,13 +69,16 @@ const columns = [
         :to="row.original.link"
         target="_blank"
         rel="noopener"
-        label="Open"
-        variant="link"
+        icon="i-lucide-external-link"
+        aria-label="Open vacancy"
+        title="Open vacancy"
+        color="neutral"
+        variant="ghost"
         size="xs"
       />
     </template>
     <template #notes-cell="{ row }">
-      <p class="max-w-64 whitespace-normal text-sm">{{ row.original.notes }}</p>
+      <p class="max-w-56 whitespace-normal text-sm">{{ row.original.notes }}</p>
     </template>
     <template #description-cell="{ row }">
       <UModal
@@ -133,14 +141,18 @@ const columns = [
     <template #actions-cell="{ row }">
       <div class="flex items-center gap-2">
       <UButton
-        label="Edit"
+        icon="i-lucide-pencil"
+        aria-label="Edit"
+        title="Edit"
         color="neutral"
         variant="ghost"
         size="xs"
         @click="emit('edit', row.original)"
       />
       <UButton
-        label="Delete"
+        icon="i-lucide-trash-2"
+        aria-label="Delete"
+        title="Delete"
         color="error"
         variant="ghost"
         size="xs"

@@ -118,7 +118,7 @@ watch(
 </script>
 
 <template>
-  <UContainer class="grid gap-6 py-8">
+  <UContainer class="grid max-w-none gap-6 px-4 py-6 sm:px-4 lg:px-4">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-semibold">Job applications</h1>
       <UButton label="Log out" color="neutral" variant="outline" @click="logout" />
